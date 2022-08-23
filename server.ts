@@ -136,7 +136,7 @@ void collectDurationPromise('cleanupFtpFolder', require('./lib/startup/cleanupFt
 void collectDurationPromise('validateConfig', require('./lib/startup/validateConfig'))()
 
 // Reloads the i18n files in case of server restarts or starts.
-async function restoreOverwrittenFilesWithOriginals () {
+async function restoreOverwrittenFilesWithOriginals() {
   await collectDurationPromise('restoreOverwrittenFilesWithOriginals', require('./lib/startup/restoreOverwrittenFilesWithOriginals'))()
 }
 
@@ -276,7 +276,7 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   app.post('/rest/memories', uploadToDisk.single('image'), ensureFileIsPassed, security.appendUserId(), metrics.observeFileUploadMetricsMiddleware(), memory.addMemory())
 
   app.use(bodyParser.text({ type: '*/*' }))
-  app.use(function jsonParser (req: Request, res: Response, next: NextFunction) {
+  app.use(function jsonParser(req: Request, res: Response, next: NextFunction) {
     // @ts-expect-error
     req.rawBody = req.body
     if (req.headers['content-type']?.includes('application/json')) {
@@ -298,6 +298,52 @@ restoreOverwrittenFilesWithOriginals().then(() => {
     max_logs: '2d'
   })
   app.use(morgan('combined', { stream: accessLogStream }))
+  app.use(bodyParser.json());
+  const winston = require('winston');
+  const expressWinston = require('express-winston');
+
+  app.use(expressWinston.logger({
+    transports: [
+      // - Write all logs with importance level of `error` or less to `error.log`
+      // - Write all logs with importance level of `info` or less to `combined.log`
+      new winston.transports.File({ filename: 'error.log', level: 'error' }),
+      new winston.transports.File({ filename: 'logs/combined.log' }),
+    ],
+    format: winston.format.combine(
+      //winston.format.colorize(), // só é bom para print no terminal
+      winston.format.timestamp(),
+      winston.format.json(),
+      winston.format.printf(info => `${JSON.stringify({ timestamp: info.timestamp, ip: info.ip, message: info.message, method: info.method, uri: info.uri, requestBody: info.requestBody, responseBody: info.responseBody, statusCode: info.statusCode })}`)
+    ),
+    meta: true,
+    metaField: null,
+    requestField: null,
+    responseField: null,
+    baseMeta: null,
+    expressFormat: true,
+    colorize: false,
+    responseWhitelist: ['body'],
+    ignoreRoute: function (req, res) { return false; },
+    skip: function (req, res) {
+      // skip if the content-type does't include json
+      if (req.header('content-type') != null && req.header('content-type').includes('json')) {
+        return false
+      } else if (res.getHeader('content-type') != null && res.getHeader('content-type').includes('json')) {
+        return false
+      }
+      return res.getHeader('content-type') == null || res.getHeader('content-type').includes('json') == false;
+    },
+    dynamicMeta: function (req, res) {
+      return {
+        statusCode: res.statusCode ? res.statusCode : null,
+        ip: req.ip ? req.ip : null,
+        requestBody: req.body ? req.body : null,
+        responseBody: res.body ? res.body : null,
+        uri: req.originalUrl ? req.originalUrl : null,
+        method: req.method ? req.method : null
+      }
+    }
+  }));
 
   // vuln-code-snippet start resetPasswordMortyChallenge
   /* Rate limiting */
@@ -305,7 +351,7 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   app.use('/rest/user/reset-password', new RateLimit({
     windowMs: 5 * 60 * 1000,
     max: 100,
-    keyGenerator ({ headers, ip }: { headers: any, ip: any }) { return headers['X-Forwarded-For'] || ip } // vuln-code-snippet vuln-line resetPasswordMortyChallenge
+    keyGenerator({ headers, ip }: { headers: any, ip: any }) { return headers['X-Forwarded-For'] || ip } // vuln-code-snippet vuln-line resetPasswordMortyChallenge
   }))
   // vuln-code-snippet end resetPasswordMortyChallenge
 
@@ -652,7 +698,7 @@ const registerWebsocketEvents = require('./lib/startup/registerWebsocketEvents')
 const customizeApplication = require('./lib/startup/customizeApplication')
 const customizeEasterEgg = require('./lib/startup/customizeEasterEgg') // vuln-code-snippet hide-line
 
-export async function start (readyCallback: Function) {
+export async function start(readyCallback: Function) {
   const datacreatorEnd = startupGauge.startTimer({ task: 'datacreator' })
   await sequelize.sync({ force: true })
   await datacreator()
@@ -676,7 +722,7 @@ export async function start (readyCallback: Function) {
   void collectDurationPromise('customizeEasterEgg', customizeEasterEgg)() // vuln-code-snippet hide-line
 }
 
-export function close (exitCode: number | undefined) {
+export function close(exitCode: number | undefined) {
   if (server) {
     clearInterval(metricsUpdateLoop)
     server.close()
