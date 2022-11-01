@@ -313,7 +313,7 @@ restoreOverwrittenFilesWithOriginals().then(() => {
       //winston.format.colorize(), // só é bom para print no terminal
       winston.format.timestamp(),
       winston.format.json(),
-      winston.format.printf(info => `${JSON.stringify({ timestamp: info.timestamp, ip: info.ip, message: info.message, method: info.method, uri: info.uri, requestBody: info.requestBody, responseBody: info.responseBody, statusCode: info.statusCode })}`)
+      winston.format.printf(info => `${JSON.stringify({ timestamp: info.timestamp, ip: info.ip, message: info.message, method: info.method, uri: info.uri, requestBody: info.requestBody, responseBody: info.responseBody, statusCode: info.statusCode, headerAuthorization: info.headerAuthorization})}`)
     ),
     meta: true,
     metaField: null,
@@ -340,7 +340,8 @@ restoreOverwrittenFilesWithOriginals().then(() => {
         requestBody: req.body ? req.body : null,
         responseBody: res.body ? res.body : null,
         uri: req.originalUrl ? req.originalUrl : null,
-        method: req.method ? req.method : null
+        method: req.method ? req.method : null,
+        headerAuthorization: req.header('Authorization') ? req.header('Authorization') : null
       }
     }
   }));
