@@ -66,6 +66,48 @@ For a detailed introduction, full list of features and architecture overview ple
 
 ## Setup
 
+### Deploy to AWS EC2 (this version)
+
+**Creating the Docker Image on Docker Hub**
+
+
+```
+docker build --platform linux/amd64 -t juice-shop-with-winston-amd64 .
+
+docker images --filter reference=juice-shop-with-winston-amd64
+
+docker tag juice-shop-with-winston-amd64 assf/juice-shop-with-winston-amd64
+
+docker push <your repository>/juice-shop-with-winston-amd64
+
+```
+
+
+**Running EC2**
+
+We need to open port 3000. 
+Considering EC2 is listenning on http://ec2-54-163-194-116.compute-1.amazonaws.com.
+
+```
+sudo yum install docker
+sudo service docker start
+
+sudo docker pull assf/juice-shop-with-winston-amd64:latest
+
+// -rm = Automatically remove the container when it exits
+sudo docker run --rm -p 3000:3000 assf/juice-shop-with-winston-amd64
+
+//  -d = --detach
+sudo docker run --rm -p 3000:3000 -d assf/juice-shop-with-winston-amd64
+```
+We can test the application on http://ec2-54-163-194-116.compute-1.amazonaws.com and to access the logs on http://ec2-54-163-194-116.compute-1.amazonaws.com:3000/support/logs/.
+
+Stop it with:
+```
+sudo docker stop $(sudo docker ps -q)
+```
+
+
 > You can find some less common installation variations in
 > [the _Running OWASP Juice Shop_ documentation](https://pwning.owasp-juice.shop/part1/running.html).
 
