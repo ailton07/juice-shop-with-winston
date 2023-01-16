@@ -95,10 +95,10 @@ sudo service docker start
 sudo docker pull assf/juice-shop-with-winston-amd64:latest
 
 // -rm = Automatically remove the container when it exits
-sudo docker run --rm -p 3000:3000 assf/juice-shop-with-winston-amd64
+sudo docker run --rm -p 80:3000 assf/juice-shop-with-winston-amd64
 
 //  -d = --detach
-sudo docker run --rm -p 3000:3000 -d assf/juice-shop-with-winston-amd64
+sudo docker run --rm -p 80:3000 -d assf/juice-shop-with-winston-amd64
 ```
 We can test the application on http://ec2-54-163-194-116.compute-1.amazonaws.com and to access the logs on http://ec2-54-163-194-116.compute-1.amazonaws.com:3000/support/logs/.
 
